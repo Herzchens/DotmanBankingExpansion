@@ -1,0 +1,31 @@
+discord:
+  token: "YOUR_BOT_TOKEN"
+  guild-id: "YOUR_GUILD_ID"
+  channel-id: "YOUR_CHANNEL_ID"
+  # Mẫu tin nhắn chỉ cần giữ các placeholder quan trọng
+  trigger-message: |
+    "{player}" vừa nạp "{amount}" VNĐ
+    Hình thức nạp: "{method}"
+    Cụm: "{cluster}"
+
+clusters:
+  - "SkyFree"
+
+# Chỉ xử lý khi hình thức nạp là Ngân hàng
+accepted-methods:
+  - "Ngân hàng"
+
+commands:
+  10K:
+    - "say {player} vừa nạp 10K"
+    - "eco give {player} 10000"
+  20K:
+    - "broadcast Nạp tiền thành công 20K!"
+  50K:
+    - "give {player} diamond 1"
+  100K:
+    - "lp user {player} permission set vip"
+  200K:
+    - "give {player} diamond 5"
+  500K:
+    - "give {player} netherite_ingot 3"
