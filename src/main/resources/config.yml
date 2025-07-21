@@ -14,7 +14,7 @@ accepted-methods:
   - Thẻ Cào
   - Thủ Công
 
-commands:
+commands: # Use "K" "M" "B" for unit and "." for decimal number
   10K:
     - "eco give {player} 10000" # Example
   20K:
@@ -28,6 +28,20 @@ commands:
     - "give {player} diamond 1"
   500K:
     - "eco give {player} 500000"
+  1M:
+    - "eco give {player} 1000000"
+    - "give {player} diamond_block 1"
+  1.5M:
+    - "eco give {player} 1500000"
+  2M:
+    - "eco give {player} 2000000"
+    - "give {player} netherite_ingot 1"
+  5M:
+    - "eco give {player} 5000000"
+    - "give {player} beacon 1"
+  1B:
+    - "eco give {player} 1000000000"
+    - "give {player} dragon_head 1"
 
 debug:
   enabled: false # Set value to "true" to enable debug
