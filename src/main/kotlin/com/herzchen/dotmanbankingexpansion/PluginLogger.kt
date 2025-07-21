@@ -7,7 +7,7 @@ import java.util.*
 class PluginLogger(private val plugin: DotmanBankingExpansion) {
     private val logsDir: File = File(plugin.dataFolder, "logs")
     private val fileNameDateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-    private val entryDateFormat    = SimpleDateFormat("HH-mm-ss-SSS", Locale.getDefault())
+    private val entryDateFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
 
     init {
         if (!logsDir.exists()) {
@@ -35,5 +35,13 @@ class PluginLogger(private val plugin: DotmanBankingExpansion) {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    fun logCommandExecution(cmd: String, success: Boolean, response: String? = null) {
+        val status = if (success) "SUCCESS" else "FAILED"
+        val emoji = if (success) "✅" else "❌"
+        val responsePart = if (response != null) " | Response: $response" else ""
+
+        log("$emoji Command: '$cmd' - Status: $status$responsePart")
     }
 }
