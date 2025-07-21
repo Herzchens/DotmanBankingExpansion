@@ -82,23 +82,22 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
             return
         }
 
-        val amountLevels = config.commands.keys.mapNotNull { key ->
-            when (key) {
-                "10K" -> 10_000
-                "20K" -> 20_000
-                "50K" -> 50_000
-                "100K" -> 100_000
-                "200K" -> 200_000
-                "500K" -> 500_000
-                else   -> null
-            }
-        }.sorted()
-
         val toRun = mutableListOf<String>()
-        for (level in amountLevels) {
-            if (amount >= level) {
-                val key = "${level/1000}K"
-                config.commands[key]?.let { toRun += it }
+        config.commands.entries.forEach { (key, cmds) ->
+            val currentLevel = when {
+                key.endsWith("K", ignoreCase = true) -> {
+                    key.removeSuffix("K").removeSuffix("k").toDoubleOrNull()?.times(1_000)?.toInt() ?: 0
+                }
+                key.endsWith("M", ignoreCase = true) -> {
+                    key.removeSuffix("M").removeSuffix("m").toDoubleOrNull()?.times(1_000_000)?.toInt() ?: 0
+                }
+                key.endsWith("B", ignoreCase = true) -> {
+                    key.removeSuffix("B").removeSuffix("b").toDoubleOrNull()?.times(1_000_000_000)?.toInt() ?: 0
+                }
+                else -> key.toIntOrNull() ?: 0
+            }
+            if (amount >= currentLevel) {
+                toRun.addAll(cmds)
             }
         }
 
