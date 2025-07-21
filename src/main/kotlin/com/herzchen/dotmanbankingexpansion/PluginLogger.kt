@@ -5,12 +5,11 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class PluginLogger(private val plugin: DotmanBankingExpansion) {
-    private val logsDir: File
+    private val logsDir: File = File(plugin.dataFolder, "logs")
     private val fileNameDateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
     private val entryDateFormat    = SimpleDateFormat("HH-mm-ss-SSS", Locale.getDefault())
 
     init {
-        logsDir = File(plugin.dataFolder, "logs")
         if (!logsDir.exists()) {
             logsDir.mkdirs()
         }
