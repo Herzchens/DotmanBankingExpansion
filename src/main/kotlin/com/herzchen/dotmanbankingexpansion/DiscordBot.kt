@@ -2,18 +2,17 @@ package com.herzchen.dotmanbankingexpansion
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
-import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
 import org.bukkit.Bukkit
-import java.util.regex.Matcher
 
 class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter() {
     private lateinit var jda: JDA
     private val config get() = plugin.configManager
     private val logger get() = plugin.pluginLogger
+    private var debugChannel: TextChannel? = null
 
     fun start() {
         try {
@@ -24,6 +23,13 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
                 .awaitReady()
 
             logger.log("Discord bot started successfully")
+
+            if (config.debugEnabled) {
+                jda.getGuildById(config.debugGuildId)
+                    ?.getTextChannelById(config.debugChannelId)
+                    ?.let { debugChannel = it }
+                    ?: logger.log("Debug channel/guild not found")
+            }
         } catch (e: Exception) {
             logger.log("Failed to start Discord bot: ${e.message}")
             e.printStackTrace()
@@ -31,58 +37,99 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
     }
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
-        if (event.author.isBot) return
+        if (!event.author.isBot && !config.acceptUserMessages) return
+        if (event.author.isBot && event.author.id == jda.selfUser.id) return
 
-        val guild: Guild? = event.guild
-        val channel: TextChannel? = event.channel.asTextChannel()
+        if (event.guild.idLong != config.guildId || event.channel.idLong != config.channelId) return
 
-        if (guild?.idLong != config.guildId || channel?.idLong != config.channelId) {
+        val raw = event.message.contentRaw.trim()
+        if (!raw.startsWith("## Nạp thẻ")) {
+            if (config.debugEnabled) sendDebugMessage("❗ Message không khớp header: $raw")
             return
         }
 
-        val matcher = config.triggerPattern.matcher(event.message.contentRaw)
-        if (matcher.find()) {
-            processDonation(matcher)
-        }
-    }
+        val lines = raw
+            .split(Regex("\r?\n"))
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
 
-    private fun processDonation(matcher: Matcher) {
-        val cluster = matcher.group("cluster")
-        val amount = matcher.group("amount").replace(".", "").replace(",", "")
-        val player = matcher.group("player")
-        val method = matcher.group("method")
+        val line2 = lines.getOrNull(1) ?: run {
+            if (config.debugEnabled) sendDebugMessage("❗ Thiếu dòng 2: $raw")
+            return
+        }
+        val player = line2.substringAfter("**").substringBefore("**")
+        val amountStr = line2
+            .substringAfter("nạp **")
+            .substringBefore(" VNĐ**")
+            .replace("\\D".toRegex(), "")
+        val amount = amountStr.toIntOrNull() ?: 0
+
+        val method = lines
+            .firstOrNull { it.startsWith("Hình thức nạp:") }
+            ?.substringAfter("Hình thức nạp:")
+            ?.trim() ?: ""
+        val cluster = lines
+            .firstOrNull { it.startsWith("Cụm:") }
+            ?.substringAfter("Cụm:")
+            ?.trim() ?: ""
 
         if (method !in config.acceptedMethods) {
-            logger.log("Skipped donation: Invalid method $method")
+            sendDebugMessage("⚠️ Phương thức không được chấp nhận: $method")
             return
         }
-
         if (cluster !in config.clusters) {
-            logger.log("Skipped donation: Invalid cluster $cluster")
+            sendDebugMessage("⚠️ Cụm không hợp lệ: $cluster")
             return
         }
 
-        val amountKey = when (amount.toInt()) {
-            in 10000..19999 -> "10K"
-            in 20000..49999 -> "20K"
-            in 50000..99999 -> "50K"
-            in 100000..199999 -> "100K"
-            in 200000..499999 -> "200K"
-            else -> "500K"
+        val amountLevels = config.commands.keys.mapNotNull { key ->
+            when (key) {
+                "10K" -> 10_000
+                "20K" -> 20_000
+                "50K" -> 50_000
+                "100K" -> 100_000
+                "200K" -> 200_000
+                "500K" -> 500_000
+                else   -> null
+            }
+        }.sorted()
+
+        val toRun = mutableListOf<String>()
+        for (level in amountLevels) {
+            if (amount >= level) {
+                val key = "${level/1000}K"
+                config.commands[key]?.let { toRun += it }
+            }
         }
 
-        config.commands[amountKey]?.forEach { command ->
-            val formattedCmd = command
+        toRun.forEach { cmdTmpl ->
+            val cmd = cmdTmpl
                 .replace("{player}", player)
-                .replace("{amount}", amount)
+                .replace("{amount}", amount.toString())
                 .replace("{cluster}", cluster)
 
             Bukkit.getScheduler().runTask(plugin, Runnable {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), formattedCmd)
+                val success = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd)
+                if (config.debugEnabled) {
+                    val emoji = if (success) "✅" else "❌"
+                    sendDebugMessage("$emoji Thi hành lệnh `$cmd`")
+                }
             })
+
         }
 
-        logger.log("Processed donation: $player - $amount VNĐ - $cluster")
+        if (toRun.isNotEmpty()) {
+            logger.log("Processed donation: $player - $amount VNĐ - $cluster")
+            sendDebugMessage("💰 Đã xử lý donate $amount VNĐ từ $player tại $cluster")
+        } else {
+            logger.log("No commands for donation: $amount VNĐ")
+            sendDebugMessage("⚠️ Không tìm thấy lệnh cho donate $amount VNĐ")
+        }
+    }
+
+    private fun sendDebugMessage(msg: String) {
+        if (!config.debugEnabled) return
+        debugChannel?.sendMessage(msg)?.queue()
     }
 
     fun shutdown() {
