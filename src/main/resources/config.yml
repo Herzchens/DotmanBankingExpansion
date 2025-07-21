@@ -1,31 +1,35 @@
 discord:
-  token: "YOUR_BOT_TOKEN"
-  guild-id: "YOUR_GUILD_ID"
-  channel-id: "YOUR_CHANNEL_ID"
-  # Mẫu tin nhắn chỉ cần giữ các placeholder quan trọng
-  trigger-message: |
-    "{player}" vừa nạp "{amount}" VNĐ
-    Hình thức nạp: "{method}"
-    Cụm: "{cluster}"
+  token: "your_bot_token"
+  guild-id: "your_guild_id"
+  channel-id: "your_channel_id"
+  accept-user-messages: true # Set value to "false" to only record bot's messages
 
-clusters:
-  - "SkyFree"
+clusters: # Name must be matched with the name in the bot messages
+  - SkyFree
+  - OtherCluster1
+  - OtherCluster2
 
-# Chỉ xử lý khi hình thức nạp là Ngân hàng
 accepted-methods:
-  - "Ngân hàng"
+  - Ngân hàng
+  - Thẻ Cào
+  - Thủ Công
 
 commands:
   10K:
-    - "say {player} vừa nạp 10K"
-    - "eco give {player} 10000"
+    - "eco give {player} 10000" # Example
   20K:
-    - "broadcast Nạp tiền thành công 20K!"
+    - "eco give {player} 20000"
   50K:
-    - "give {player} diamond 1"
+    - "eco give {player} 50000"
   100K:
-    - "lp user {player} permission set vip"
+    - "eco give {player} 100000"
   200K:
-    - "give {player} diamond 5"
+    - "eco give {player} 200000"
+    - "give {player} diamond 1"
   500K:
-    - "give {player} netherite_ingot 3"
+    - "eco give {player} 500000"
+
+debug:
+  enabled: false # Set value to "true" to enable debug
+  guild-id: "your_guild_id"
+  channel-id: "debug_channel_id"
