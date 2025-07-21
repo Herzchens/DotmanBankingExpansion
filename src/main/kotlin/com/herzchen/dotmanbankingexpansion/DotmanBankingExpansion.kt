@@ -15,7 +15,6 @@ class DotmanBankingExpansion : JavaPlugin() {
         }
 
         saveResource("config.yml", false)
-        saveResource("log.yml", false)
 
         configManager = ConfigManager(this)
         configManager.loadConfig()
@@ -104,7 +103,6 @@ class DotmanBankingExpansion : JavaPlugin() {
 
     fun reload() {
         configManager.loadConfig()
-        pluginLogger.reloadConfig()
 
         if (::discordBot.isInitialized) {
             discordBot.shutdown()
