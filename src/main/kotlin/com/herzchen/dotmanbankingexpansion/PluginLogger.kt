@@ -1,44 +1,40 @@
 package com.herzchen.dotmanbankingexpansion
 
-import org.bukkit.configuration.file.YamlConfiguration
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
 class PluginLogger(private val plugin: DotmanBankingExpansion) {
-    private lateinit var logFile: File
-    private lateinit var dateFormat: SimpleDateFormat
-    private var logFormat: String = "[{date}] {message}"
+    private val logsDir: File
+    private val fileNameDateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+    private val entryDateFormat    = SimpleDateFormat("HH-mm-ss-SSS", Locale.getDefault())
 
     init {
-        reloadConfig()
-    }
-
-    fun reloadConfig() {
-        val logConfigFile = File(plugin.dataFolder, "log.yml")
-        if (!logConfigFile.exists()) {
-            plugin.saveResource("log.yml", true)
+        logsDir = File(plugin.dataFolder, "logs")
+        if (!logsDir.exists()) {
+            logsDir.mkdirs()
         }
-
-        val logConfig = YamlConfiguration.loadConfiguration(logConfigFile)
-
-        logFormat = logConfig.getString("log-format") ?: "[{date}] {message}"
-        val datePattern = logConfig.getString("date-format") ?: "dd/MM/yyyy - HH:mm:ss.SSS"
-        val logPath = logConfig.getString("log-file") ?: "logs/dotman-banking.log"
-
-        dateFormat = SimpleDateFormat(datePattern)
-        logFile = File(plugin.dataFolder, logPath).apply {
-            parentFile.mkdirs()
-        }
+        log("=== Bot starting up ===")
     }
 
     fun log(message: String) {
-        val date = dateFormat.format(Date())
-        val formattedMessage = logFormat
-            .replace("{date}", date)
-            .replace("{message}", message)
+        try {
+            val today = Date()
+            val fileName = "${fileNameDateFormat.format(today)}.log"
+            val logFile = File(logsDir, fileName)
 
-        logFile.appendText("$formattedMessage\n")
-        plugin.server.consoleSender.sendMessage(formattedMessage)
+            if (!logFile.exists()) {
+                logFile.createNewFile()
+            }
+
+            val timestamp = entryDateFormat.format(today)
+            val line = "[$timestamp] $message"
+
+            logFile.appendText(line + System.lineSeparator())
+
+            plugin.server.consoleSender.sendMessage(line)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
