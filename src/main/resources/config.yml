@@ -2,7 +2,7 @@ discord:
   token: "your_bot_token"
   guild-id: "your_guild_id"
   channel-id: "your_channel_id"
-  accept-user-messages: true # Set value to "false" to only record bot's messages
+  accept-user-messages: false # Set value to "true" to allow human messages
 
 clusters: # Name must be matched with the name in the bot messages
   - SkyFree
