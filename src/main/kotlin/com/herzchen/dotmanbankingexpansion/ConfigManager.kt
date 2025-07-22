@@ -10,7 +10,7 @@ class ConfigManager(private val plugin: JavaPlugin) {
     var channelId = 0L
     val clusters = mutableListOf<String>()
     val acceptedMethods = mutableListOf<String>()
-    val commands = mutableMapOf<String, List<String>>()
+    val commands = mutableMapOf<Int, List<String>>()
     var acceptUserMessages = false
 
     var debugEnabled = false
@@ -59,7 +59,17 @@ class ConfigManager(private val plugin: JavaPlugin) {
     private fun loadCommands(section: ConfigurationSection?) {
         commands.clear()
         section?.getKeys(false)?.forEach { key ->
-            commands[key] = section.getStringList(key)
+            val level = parseLevel(key)
+            commands[level] = section.getStringList(key)
+        }
+    }
+
+    private fun parseLevel(key: String): Int {
+        return when {
+            key.endsWith("K", true) -> key.removeSuffix("K").toDoubleOrNull()?.times(1000)?.toInt() ?: 0
+            key.endsWith("M", true) -> key.removeSuffix("M").toDoubleOrNull()?.times(1000000)?.toInt() ?: 0
+            key.endsWith("B", true) -> key.removeSuffix("B").toDoubleOrNull()?.times(1000000000)?.toInt() ?: 0
+            else -> key.toIntOrNull() ?: 0
         }
     }
 }
