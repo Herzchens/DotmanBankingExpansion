@@ -1,13 +1,19 @@
 package com.herzchen.dotmanbankingexpansion
 
+import java.io.BufferedWriter
 import java.io.File
-import java.text.SimpleDateFormat
+import java.io.FileWriter
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class PluginLogger(private val plugin: DotmanBankingExpansion) {
     private val logsDir: File = File(plugin.dataFolder, "logs")
-    private val fileNameDateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-    private val entryDateFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
+    private val fileNameFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.getDefault())
+    private val entryFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS", Locale.getDefault())
+    private var writer: BufferedWriter? = null
+    private var currentLogFile: File? = null
 
     init {
         if (!logsDir.exists()) {
@@ -18,23 +24,31 @@ class PluginLogger(private val plugin: DotmanBankingExpansion) {
 
     fun log(message: String) {
         try {
-            val today = Date()
-            val fileName = "${fileNameDateFormat.format(today)}.log"
+            val today = LocalDate.now()
+            val fileName = fileNameFormatter.format(today) + ".log"
             val logFile = File(logsDir, fileName)
 
-            if (!logFile.exists()) {
-                logFile.createNewFile()
+            if (writer == null || currentLogFile != logFile) {
+                writer?.close()
+                writer = FileWriter(logFile, true).buffered()
+                currentLogFile = logFile
             }
 
-            val timestamp = entryDateFormat.format(today)
+            val timestamp = entryFormatter.format(LocalDateTime.now())
             val line = "[$timestamp] $message"
 
-            logFile.appendText(line + System.lineSeparator())
+            writer?.write(line)
+            writer?.newLine()
+            writer?.flush()
 
             plugin.server.consoleSender.sendMessage(line)
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    fun close() {
+        writer?.close()
     }
 
     fun logCommandExecution(cmd: String, success: Boolean, response: String? = null) {
