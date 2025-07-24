@@ -14,36 +14,52 @@ accepted-methods:
   - Thẻ Cào
   - Thủ Công
 
-commands: # Use "K" "M" "B" for unit and "." for decimal number
-  10K:
-    - "eco give {player} 10000" # Example
-  20K:
-    - "eco give {player} 20000"
-  50K:
-    - "eco give {player} 50000"
-  100K:
-    - "eco give {player} 100000"
-  200K:
-    - "eco give {player} 200000"
+commands:
+  10000:
+    - "give {player} dirt 1"
+  20000:
+    - "give {player} oak_planks 1"
+  50000:
+    - "give {player} coal 1"
+  100000:
+    - "give {player} emerald 1"
+  200000:
     - "give {player} diamond 1"
-  500K:
-    - "eco give {player} 500000"
-  1M:
-    - "eco give {player} 1000000"
-    - "give {player} diamond_block 1"
-  1.5M:
-    - "eco give {player} 1500000"
-  2M:
-    - "eco give {player} 2000000"
+  500000:
+    - "give {player} netherrack 1"
+  1000000:
     - "give {player} netherite_ingot 1"
-  5M:
-    - "eco give {player} 5000000"
+  1500000:
+    - "give {player} leather 1"
+  2000000:
     - "give {player} beacon 1"
-  1B:
-    - "eco give {player} 1000000000"
+  5000000:
+    - "give {player} elytra 1"
+  1000000000:
     - "give {player} dragon_head 1"
+
+# Milestone reward configuration
+milestone-bonus:
+  enabled: true
+  amount: 50000 # Every 50K VNĐ
+  commands: # If amount set to an integer, only give <amount> times, if set to {bonus_times}, it will give 1 per milestone
+    - "give {player} string {bonus_times}"
+
+# Streak system configuration
+streak:
+  enabled: true
+  cycle-hours: 24 # Reset time in hours
+  discord-notifications: true # Turn on/off discord notify
+  commands:
+    1:
+      - "say {player} has started their donation streak!"
+    3:
+      - "say {player} is on a 3-day streak!"
+    7:
+      - "give {player} netherite_block 1"
+      - "say {player} has a 7-day streak! Amazing!"
 
 debug:
   enabled: false # Set value to "true" to enable debug
   guild-id: "your_guild_id"
-  channel-id: "debug_channel_id"
+  channel-id: "your_channel_id"
