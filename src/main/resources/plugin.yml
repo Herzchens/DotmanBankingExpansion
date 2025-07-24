@@ -4,5 +4,11 @@ main: com.herzchen.dotmanbankingexpansion.DotmanBankingExpansion
 api-version: 1.20
 author: Herzchen
 commands:
-  dbankreload:
-    description: Reload plugin configuration
+  dbe:
+    description: Main command for Dotman Banking Expansion
+    usage: /dbe [reload|streakinfo|streak|help]
+    aliases: [dotmanbanking]
+permissions:
+  dbe.admin:
+    description: Allows access to admin commands
+    default: op
