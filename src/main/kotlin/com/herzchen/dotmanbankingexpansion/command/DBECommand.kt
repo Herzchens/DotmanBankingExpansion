@@ -25,18 +25,10 @@ class DBECommand(private val plugin: DotmanBankingExpansion) : CommandExecutor {
 
         when (args[0].lowercase()) {
             "reload" -> handleReload(sender)
-
-            "streakinfo" -> {
-                plugin.streakInfoCommand.onCommand(
-                    sender,
-                    cmd,
-                    label,
-                    args.copyOfRange(1, args.size)
-                )
-            }
-
+            "streakinfo" -> plugin.streakInfoCommand.onCommand(sender, cmd, label, args.copyOfRange(1, args.size))
             "streak" -> handleStreak(sender, args)
             "help"   -> showHelp(sender)
+            "confirm" -> handleConfirm(sender, args)
             else     -> showHelp(sender)
         }
 
@@ -72,10 +64,28 @@ class DBECommand(private val plugin: DotmanBankingExpansion) : CommandExecutor {
 
         when (args.getOrNull(1)?.lowercase()) {
             "frozen", "restore" -> handleTokenManagement(sender, args)
-            "resetall"                   -> handleResetAll(sender)
-            "set"                        -> handleSetStreak(sender, args)
-            "revert"                     -> handleRevert(sender, args)
-            else                         -> sender.sendMessage(Component.text("lệnh không hợp lệ!", NamedTextColor.RED))
+            "resetall" -> handleResetAll(sender)
+            "set" -> handleSetStreak(sender, args)
+            "revert" -> handleRevert(sender, args)
+            "restore" -> handleRestore(sender, args)
+            else -> sender.sendMessage(Component.text("lệnh không hợp lệ!", NamedTextColor.RED))
+        }
+    }
+
+    private fun handleRestore(sender: CommandSender, args: Array<out String>) {
+        val target = if (args.size > 2 && sender.hasPermission("dbe.admin")) {
+            Bukkit.getPlayer(args[2])
+        } else sender as? Player
+
+        if (target == null) {
+            sender.sendMessage(Component.text("Không tìm thấy người chơi!", NamedTextColor.RED))
+            return
+        }
+
+        if (plugin.streakService.useRestore(target.uniqueId)) {
+            sender.sendMessage(Component.text("Đã restore streak cho ${target.name}", NamedTextColor.GREEN))
+        } else {
+            sender.sendMessage(Component.text("Không đủ token restore!", NamedTextColor.RED))
         }
     }
 
@@ -129,9 +139,25 @@ class DBECommand(private val plugin: DotmanBankingExpansion) : CommandExecutor {
         sender.sendMessage(Component.text("Bạn có chắc muốn reset toàn bộ streak?", NamedTextColor.RED))
         sender.sendMessage(Component.text("Nhập mã xác nhận sau trong 10 giây: $confirmationCode", NamedTextColor.YELLOW))
 
+        sender.sendMessage(Component.text("Sử dụng: /dbe confirm $confirmationCode", NamedTextColor.YELLOW))
+
         plugin.confirmationManager.setConfirmation(sender, confirmationCode) {
             plugin.streakService.resetAllStreaks()
             sender.sendMessage(Component.text("Đã reset toàn bộ streak!", NamedTextColor.GREEN))
+        }
+    }
+
+    private fun handleConfirm(sender: CommandSender, args: Array<out String>) {
+        if (args.size < 2) {
+            sender.sendMessage(Component.text("Usage: /dbe confirm <mã-xác-nhận>", NamedTextColor.RED))
+            return
+        }
+
+        val code = args[1]
+        if (plugin.confirmationManager.checkConfirmation(sender, code)) {
+            sender.sendMessage(Component.text("Xác nhận thành công!", NamedTextColor.GREEN))
+        } else {
+            sender.sendMessage(Component.text("Mã xác nhận không đúng hoặc đã hết hạn!", NamedTextColor.RED))
         }
     }
 
@@ -144,8 +170,8 @@ class DBECommand(private val plugin: DotmanBankingExpansion) : CommandExecutor {
         val target = Bukkit.getPlayer(args[2])
         val amount = args[3].toIntOrNull()
 
-        if (target == null || amount == null) {
-            sender.sendMessage(Component.text("Tham số không hợp lệ!", NamedTextColor.RED))
+        if (target == null || amount == null || amount < 0) {
+            sender.sendMessage(Component.text("Tham số không hợp lệ! Số streak phải là số nguyên dương", NamedTextColor.RED))
             return
         }
 
