@@ -23,6 +23,8 @@ class YamlStreakRepository(dataFolder: File) : StreakRepository {
             restoreTokens = section.getInt("restoreTokens"),
             revertTokens = section.getInt("revertTokens"),
             currentStreak = section.getInt("currentStreak", 1),
+            previousStreak = section.getInt("previousStreak", 0),
+            longestStreak = section.getInt("longestStreak", 1),
             discordUsername = section.getString("discordUsername")
         )
     }
@@ -41,6 +43,8 @@ class YamlStreakRepository(dataFolder: File) : StreakRepository {
             "restoreTokens" to data.restoreTokens,
             "revertTokens" to data.revertTokens,
             "currentStreak" to data.currentStreak,
+            "previousStreak" to data.previousStreak,
+            "longestStreak" to data.longestStreak,
             "discordUsername" to data.discordUsername
         ))
         cfg.save(file)
