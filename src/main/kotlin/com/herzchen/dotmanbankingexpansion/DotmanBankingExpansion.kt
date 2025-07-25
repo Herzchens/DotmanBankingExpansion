@@ -81,7 +81,7 @@ class DotmanBankingExpansion : JavaPlugin() {
         streakService   = StreakService(streakRepo, configManager.streakCycleHours.toLong())
         streakDataManager = StreakDataManager(streakRepo)
         streakTokenManager = StreakTokenManager(streakRepo)
-        bossBarManager  = BossBarManager()
+        bossBarManager  = BossBarManager(streakService)
         streakScheduler = StreakScheduler(this, streakService, bossBarManager)
         streakScheduler.start()
         confirmationManager = ConfirmationManager(this)
