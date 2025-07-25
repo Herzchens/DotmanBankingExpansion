@@ -21,18 +21,41 @@ class StreakService(
         val now = Instant.now()
         val today = LocalDate.now(zoneId)
 
-        val data = repo.find(uuid)?.takeIf { it.state != StreakState.EXPIRED }
-            ?: StreakData(uuid, now, now).apply {
-                currentStreak = 1
-            }
+        var data = repo.find(uuid) ?: StreakData(uuid).apply {
+            state = StreakState.INACTIVE
+            repo.save(this)
+        }
+
+        if (data.state == StreakState.INACTIVE) {
+            data.state = StreakState.ACTIVE
+            data.currentStreak = 1
+            data.longestStreak = 1
+            data.lastUpdate = now
+            repo.save(data)
+            return data
+        }
+
+        if (data.state == StreakState.EXPIRED) {
+            data.state = StreakState.ACTIVE
+            data.currentStreak = 1
+            data.lastUpdate = now
+            repo.save(data)
+            return data
+        }
+
+        if (data.state == StreakState.FROZEN) {
+            return data
+        }
 
         val lastUpdateDate = data.lastUpdate.atZone(zoneId).toLocalDate()
         val yesterday = today.minusDays(1)
 
         if (lastUpdateDate == yesterday) {
             data.currentStreak++
-        }
-        else if (lastUpdateDate.isBefore(yesterday)) {
+            if (data.currentStreak > data.longestStreak) {
+                data.longestStreak = data.currentStreak
+            }
+        } else if (lastUpdateDate.isBefore(yesterday)) {
             data.previousStreak = data.currentStreak
             data.currentStreak = 1
         }
@@ -45,9 +68,11 @@ class StreakService(
 
     fun useFreeze(uuid: UUID): Boolean {
         val data = repo.find(uuid) ?: return false
-        if (data.freezeTokens <= 0) return false
+        if (data.freezeTokens <= 0 || data.state != StreakState.ACTIVE) return false
+
         data.freezeTokens--
         data.state = StreakState.FROZEN
+        data.lastUpdate = Instant.now() 
         repo.save(data)
         return true
     }
@@ -56,7 +81,7 @@ class StreakService(
         val data = repo.find(uuid) ?: return false
         if (data.state != StreakState.EXPIRED || data.restoreTokens <= 0) return false
 
-        data.restoreTokens -= 1
+        data.restoreTokens--
         data.state = StreakState.ACTIVE
         data.currentStreak = data.previousStreak
         data.lastUpdate = Instant.now()
@@ -67,12 +92,42 @@ class StreakService(
     fun checkExpirations() {
         val now = Instant.now()
         repo.findAll().forEach { data ->
-            if (data.state == StreakState.ACTIVE) {
-                val elapsed = Duration.between(data.lastUpdate, now).seconds
-                if (elapsed >= cycleSeconds) {
-                    data.state = StreakState.EXPIRED
-                    repo.save(data)
+            when (data.state) {
+                StreakState.ACTIVE -> {
+                    val elapsed = Duration.between(data.lastUpdate, now).seconds
+                    if (elapsed >= cycleSeconds) {
+                        if (data.freezeTokens > 0) {
+                            data.freezeTokens--
+                            data.state = StreakState.FROZEN
+                            data.lastUpdate = now
+                        } else {
+                            data.state = StreakState.EXPIRED
+                            data.lastUpdate = now
+                        }
+                        repo.save(data)
+                    }
                 }
+                StreakState.FROZEN -> {
+                    val elapsed = Duration.between(data.lastUpdate, now).seconds
+                    if (elapsed >= cycleSeconds) {
+                        if (data.freezeTokens > 0) {
+                            data.freezeTokens--
+                            data.lastUpdate = now
+                        } else {
+                            data.state = StreakState.EXPIRED
+                        }
+                        repo.save(data)
+                    }
+                }
+                StreakState.EXPIRED -> {
+                    val elapsed = Duration.between(data.lastUpdate, now).seconds
+                    if (elapsed >= cycleSeconds) {
+                        data.state = StreakState.INACTIVE
+                        data.currentStreak = 0
+                        repo.save(data)
+                    }
+                }
+                else -> {}
             }
         }
     }
@@ -92,9 +147,11 @@ class StreakService(
     fun setStreak(uuid: UUID, amount: Int): Boolean {
         val data = repo.find(uuid) ?: return false
         data.currentStreak = amount
+
         if (amount > data.longestStreak) {
             data.longestStreak = amount
         }
+
         repo.save(data)
         return true
     }
