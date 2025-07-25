@@ -1,6 +1,7 @@
 package com.herzchen.dotmanbankingexpansion.command
 
 import com.herzchen.dotmanbankingexpansion.DotmanBankingExpansion
+import com.herzchen.dotmanbankingexpansion.model.StreakState
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -59,6 +60,14 @@ class StreakInfoCommand(private val plugin: DotmanBankingExpansion) : CommandExe
             .append(Component.newline())
             .append(Component.text("Thời gian còn lại: ", NamedTextColor.YELLOW))
             .append(Component.text("${hours}h${minutes}m", NamedTextColor.GREEN))
+            .append(Component.newline())
+            .append(Component.text("Trạng thái: ", NamedTextColor.YELLOW))
+            .append(Component.text(when(data.state) {
+                StreakState.INACTIVE -> "Chưa bắt đầu"
+                StreakState.ACTIVE -> "Đang hoạt động"
+                StreakState.FROZEN -> "Đóng băng"
+                StreakState.EXPIRED -> "Hết hạn"
+            }, NamedTextColor.GREEN))
             .build()
 
         sender.sendMessage(info)
