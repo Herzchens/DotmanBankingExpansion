@@ -5,15 +5,15 @@ import java.util.UUID
 
 data class StreakData(
     val uuid: UUID,
-    var startTime: Instant,
-    var lastUpdate: Instant,
-    var state: StreakState = StreakState.ACTIVE,
+    var startTime: Instant = Instant.now(),
+    var lastUpdate: Instant = Instant.now(),
+    var state: StreakState = StreakState.INACTIVE,
     var freezeTokens: Int = 0,
     var restoreTokens: Int = 0,
     var revertTokens: Int = 0,
-    var currentStreak: Int = 1,
+    var currentStreak: Int = 0,
     var previousStreak: Int = 0,
-    var longestStreak: Int = 1,
+    var longestStreak: Int = 0,
     var discordUsername: String? = null
 ) {
     fun progress(cycleSeconds: Long): Double {
