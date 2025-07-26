@@ -21,7 +21,7 @@ class StreakService(
         val now = Instant.now()
         val today = LocalDate.now(zoneId)
 
-        var data = repo.find(uuid) ?: StreakData(uuid).apply {
+        val data = repo.find(uuid) ?: StreakData(uuid).apply {
             state = StreakState.INACTIVE
             repo.save(this)
         }
