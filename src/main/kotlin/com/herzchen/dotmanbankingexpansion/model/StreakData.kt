@@ -20,4 +20,5 @@ data class StreakData(
         val elapsed = java.time.Duration.between(lastUpdate, Instant.now()).seconds
         return (elapsed.coerceIn(0, cycleSeconds).toDouble() / cycleSeconds)
     }
+    fun canRestore(): Boolean = state == StreakState.EXPIRED
 }
