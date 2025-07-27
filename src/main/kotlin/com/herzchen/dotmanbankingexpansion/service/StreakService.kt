@@ -72,7 +72,7 @@ class StreakService(
 
         data.freezeTokens--
         data.state = StreakState.FROZEN
-        data.lastUpdate = Instant.now() 
+        data.lastUpdate = Instant.now()
         repo.save(data)
         return true
     }
@@ -159,7 +159,9 @@ class StreakService(
     fun resetAllStreaks() {
         repo.findAll().forEach { data ->
             data.currentStreak = 0
-            data.state = StreakState.EXPIRED
+            data.previousStreak = 0
+            data.longestStreak = 0
+            data.state = StreakState.INACTIVE
             data.lastUpdate = Instant.now()
             repo.save(data)
         }
@@ -167,4 +169,34 @@ class StreakService(
 
     fun getProgress(uuid: UUID): Double =
         repo.find(uuid)?.progress(cycleSeconds) ?: 0.0
+
+    fun freezePlayer(uuid: UUID, days: Int): Boolean {
+        val data = repo.find(uuid) ?: StreakData(uuid).also {
+            repo.save(it)
+        }
+
+        days * 24 * 3600L
+        data.state = StreakState.FROZEN
+
+        data.lastUpdate = Instant.now()
+        repo.save(data)
+
+        return true
+    }
+
+    fun setRemainingTime(uuid: UUID, seconds: Long): Boolean {
+        if (seconds < 0 || seconds > cycleSeconds) return false
+
+        val data = repo.find(uuid) ?: return false
+        data.lastUpdate = Instant.now().minusSeconds(cycleSeconds - seconds)
+        repo.save(data)
+        return true
+    }
+
+    fun setStatus(uuid: UUID, status: StreakState): Boolean {
+        val data = repo.find(uuid) ?: return false
+        data.state = status
+        repo.save(data)
+        return true
+    }
 }
