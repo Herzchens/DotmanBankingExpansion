@@ -8,47 +8,56 @@ import org.bukkit.entity.Player
 import java.time.Instant
 
 class StreakTokenManager(private val repo: StreakRepository) {
-    fun addFreezes(player: Player, amount: Int) {
+    fun addFreezes(player: Player, amount: Int): Boolean {
+        if (amount <= 0) return false
         updateTokens(player) { it.freezeTokens += amount }
+        return true
     }
 
-    fun addRestores(player: Player, amount: Int) {
+    fun addRestores(player: Player, amount: Int): Boolean {
+        if (amount <= 0) return false
         updateTokens(player) { it.restoreTokens += amount }
+        return true
     }
 
-    fun addReverts(player: Player, amount: Int) {
+    fun addReverts(player: Player, amount: Int): Boolean {
+        if (amount <= 0) return false
         updateTokens(player) { it.revertTokens += amount }
+        return true
     }
 
     fun takeFreezes(player: Player, amount: Int): Boolean {
+        if (amount <= 0) return false
         return updateTokens(player) {
-            if (it.freezeTokens >= amount) {
+            if (it.freezeTokens < amount) {
+                false
+            } else {
                 it.freezeTokens -= amount
                 true
-            } else {
-                false
             }
         }
     }
 
     fun takeRestores(player: Player, amount: Int): Boolean {
+        if (amount <= 0) return false
         return updateTokens(player) {
-            if (it.restoreTokens >= amount) {
+            if (it.restoreTokens < amount) {
+                false
+            } else {
                 it.restoreTokens -= amount
                 true
-            } else {
-                false
             }
         }
     }
 
     fun takeReverts(player: Player, amount: Int): Boolean {
+        if (amount <= 0) return false
         return updateTokens(player) {
-            if (it.revertTokens >= amount) {
+            if (it.revertTokens < amount) {
+                false
+            } else {
                 it.revertTokens -= amount
                 true
-            } else {
-                false
             }
         }
     }
