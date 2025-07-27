@@ -36,9 +36,11 @@ class StreakInfoCommand(private val plugin: DotmanBankingExpansion) : CommandExe
             return true
         }
 
-        val timeLeft = Duration.between(Instant.now(), data.lastUpdate.plusSeconds(plugin.streakService.cycleSeconds))
-        val hours = timeLeft.toHours()
-        val minutes = timeLeft.toMinutesPart()
+        val timeLeft = if (data.state != StreakState.INACTIVE) {
+            Duration.between(Instant.now(), data.lastUpdate.plusSeconds(plugin.streakService.cycleSeconds))
+        } else {
+            null
+        }
 
         val info = Component.text()
             .append(Component.text("===== Thông Tin Streak =====", NamedTextColor.GOLD))
@@ -59,7 +61,11 @@ class StreakInfoCommand(private val plugin: DotmanBankingExpansion) : CommandExe
             .append(Component.text(data.revertTokens, NamedTextColor.AQUA))
             .append(Component.newline())
             .append(Component.text("Thời gian còn lại: ", NamedTextColor.YELLOW))
-            .append(Component.text("${hours}h${minutes}m", NamedTextColor.GREEN))
+            .append(if (timeLeft != null) {
+                Component.text("${timeLeft.toHours()}h${timeLeft.toMinutesPart()}m", NamedTextColor.GREEN)
+            } else {
+                Component.text("Không hoạt động", NamedTextColor.GRAY)
+            })
             .append(Component.newline())
             .append(Component.text("Trạng thái: ", NamedTextColor.YELLOW))
             .append(Component.text(when(data.state) {
