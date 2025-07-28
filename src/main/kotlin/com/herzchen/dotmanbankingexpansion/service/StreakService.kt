@@ -66,17 +66,6 @@ class StreakService(
         return data
     }
 
-    fun useFreeze(uuid: UUID): Boolean {
-        val data = repo.find(uuid) ?: return false
-        if (data.freezeTokens <= 0 || data.state != StreakState.ACTIVE) return false
-
-        data.freezeTokens--
-        data.state = StreakState.FROZEN
-        data.lastUpdate = Instant.now()
-        repo.save(data)
-        return true
-    }
-
     fun useRestore(uuid: UUID): Boolean {
         val data = repo.find(uuid) ?: return false
         if (data.state != StreakState.EXPIRED || data.restoreTokens <= 0) return false
