@@ -38,20 +38,7 @@ class DotmanBankingExpansion : JavaPlugin() {
 
         configManager = ConfigManager(this).also { it.loadConfig() }
         pluginLogger = PluginLogger(this)
-        pluginLogger.log("Starting plugin...")
-
-        if (!isJDAAvailable()) {
-            Bukkit.getConsoleSender().sendMessage("§c================= §6DotmanBankingExpansion §c==================")
-            Bukkit.getConsoleSender().sendMessage("§c==§e                                                    §c==")
-            Bukkit.getConsoleSender().sendMessage("§c==§e                     LỖI NGHIÊM TRỌNG                §c==")
-            Bukkit.getConsoleSender().sendMessage("§c==§e              KHÔNG TÌM THẤY THƯ VIỆN JDA           §c==")
-            Bukkit.getConsoleSender().sendMessage("§c==§e              VUI LÒNG CÀI ĐẶT JDA 5.0.0+           §c==")
-            Bukkit.getConsoleSender().sendMessage("§c==§e                                                    §c==")
-            Bukkit.getConsoleSender().sendMessage("§c========================§c§c===============================")
-            pluginLogger.log("CRITICAL ERROR: JDA library not found! Please install JDA 5.0.0+")
-            Bukkit.getPluginManager().disablePlugin(this)
-            return
-        }
+        pluginLogger.log("Khởi chạy plugin...")
 
         if (configManager.token.isBlank()) {
             Bukkit.getConsoleSender().sendMessage("§c================= §6DotmanBankingExpansion §c==================")
@@ -61,7 +48,7 @@ class DotmanBankingExpansion : JavaPlugin() {
             Bukkit.getConsoleSender().sendMessage("§c==§e              VUI LÒNG KIỂM TRA CONFIG.YML          §c==")
             Bukkit.getConsoleSender().sendMessage("§c==§e                                                    §c==")
             Bukkit.getConsoleSender().sendMessage("§c========================§c§c===============================")
-            pluginLogger.log("ERROR: Discord token is empty! Check config.yml")
+            pluginLogger.log("LỖI: Thiếu discord bot token, vui lòng kiểm tra config.yml")
         } else {
             try {
                 discordBot = DiscordBot(this)
@@ -73,7 +60,7 @@ class DotmanBankingExpansion : JavaPlugin() {
                 Bukkit.getConsoleSender().sendMessage("§c==§e              ${e.message?.take(42)?.padEnd(42)}              §c==")
                 Bukkit.getConsoleSender().sendMessage("§c==§e                                                    §c==")
                 Bukkit.getConsoleSender().sendMessage("§c========================§c§c===============================")
-                pluginLogger.log("Failed to start Discord bot: ${e.message}")
+                pluginLogger.log("Khởi động bot thất bại: ${e.message}")
             }
         }
 
@@ -86,7 +73,7 @@ class DotmanBankingExpansion : JavaPlugin() {
         streakScheduler.start()
         confirmationManager = ConfirmationManager(this)
         streakInfoCommand = StreakInfoCommand(this)
-        pluginLogger.log("Streak subsystem initialized")
+        pluginLogger.log("Khởi động hệ thống chuỗi")
 
         getCommand("dbe")?.setExecutor(DBECommand(this))
         getCommand("dbe")?.tabCompleter = TabComplete()
@@ -99,7 +86,7 @@ class DotmanBankingExpansion : JavaPlugin() {
         Bukkit.getConsoleSender().sendMessage("§a==§f                    itztli_herzchen                  §a==")
         Bukkit.getConsoleSender().sendMessage("§a==§f                                                    §a==")
         Bukkit.getConsoleSender().sendMessage("§a============================§a§a=============================")
-        pluginLogger.log("Plugin enabled successfully")
+        pluginLogger.log("Plugin đã được bật thành công")
     }
 
     override fun onDisable() {
@@ -113,12 +100,12 @@ class DotmanBankingExpansion : JavaPlugin() {
         Bukkit.getConsoleSender().sendMessage("§c==§e                 DISCORD BOT ĐÃ NGẮT KẾT NỐI        §c==")
         Bukkit.getConsoleSender().sendMessage("§c==§e                                                    §c==")
         Bukkit.getConsoleSender().sendMessage("§c============================§c§c=============================")
-        pluginLogger.log("Plugin disabled")
+        pluginLogger.log("Plugin đã bị tắt")
     }
 
     fun reload() {
         configManager.loadConfig()
-        pluginLogger.log("Configuration reloaded")
+        pluginLogger.log("Nạp lại cấu hình")
 
         if (::discordBot.isInitialized) {
             try {
@@ -132,7 +119,7 @@ class DotmanBankingExpansion : JavaPlugin() {
                 Bukkit.getConsoleSender().sendMessage("§a==§f                DISCORD BOT ĐÃ KHỞI ĐỘNG LẠI       §a==")
                 Bukkit.getConsoleSender().sendMessage("§a==§f                                                    §a==")
                 Bukkit.getConsoleSender().sendMessage("§a============================§a§a=============================")
-                pluginLogger.log("Discord bot restarted")
+                pluginLogger.log("Bot đã khởi động lại")
             } catch (e: Exception) {
                 Bukkit.getConsoleSender().sendMessage("§c================= §6DotmanBankingExpansion §c==================")
                 Bukkit.getConsoleSender().sendMessage("§c==§e                                                    §c==")
@@ -140,22 +127,16 @@ class DotmanBankingExpansion : JavaPlugin() {
                 Bukkit.getConsoleSender().sendMessage("§c==§e              ${e.message?.take(42)?.padEnd(42)}              §c==")
                 Bukkit.getConsoleSender().sendMessage("§c==§e                                                    §c==")
                 Bukkit.getConsoleSender().sendMessage("§c========================§c§c===============================")
-                pluginLogger.log("Failed to restart Discord bot: ${e.message}")
+                pluginLogger.log("Khởi động bot thất bại: ${e.message}")
             }
         }
 
         if (configManager.token.isBlank()) {
-            logger.warning("Discord token is empty! Bot will not start.")
+            logger.warning("Bot token trống, bot sẽ không thể khởi động lại.")
             return
         }
 
-        Bukkit.getConsoleSender().sendMessage("§a=== Configuration reloaded ===")
+        Bukkit.getConsoleSender().sendMessage("§a=== Hoàn tất nạp lại cấu hình ===")
     }
 
-    private fun isJDAAvailable(): Boolean = try {
-        Class.forName("net.dv8tion.jda.api.JDA")
-        true
-    } catch (_: ClassNotFoundException) {
-        false
-    }
 }
