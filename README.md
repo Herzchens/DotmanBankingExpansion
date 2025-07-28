@@ -65,19 +65,38 @@ streak:
 
 ### Lệnh chính
 ```
-/dbe help - Hiển thị trợ giúp
+/dbe help - Hiển thị trang trợ giúp
 /dbe reload - Tải lại cấu hình plugin
 ```
 
 ### Lệnh streak
 ```
-/dbe streakinfo [player] - Xem thông tin streak
-/dbe streak [frozen|restore|revert] [give|take|takeall] <player> [amount] - Give token cho người chơi
-/dbe streak resetall - Reset toàn bộ streak
+/dbe streakinfo <player> - Xem thông tin streak của player
+/dbe streakinfo - Xem thông tin streak của bạn
+
+/dbe frozen give <player> <amount> - Trao frozen token
+/dbe frozen take <player> <amount> - Lấy frozen token
+/dbe frozen takeall <player> - Lấy toàn bộ frozen token
 /dbe streak frozen <player> <days> - Đóng băng streak
-/dbe streak restore <player> - Khôi phục streak 
-/dbe streak revert [player] - Revert streak
+
+/dbe restore give <player> <amount> - Trao restore token
+/dbe restore take <player> <amount> - Lấy restore token
+/dbe restore takeall <player> - Lấy toàn bộ restore token
+/dbe streak restore - Khôi phục streak của bản thân
+/dbe streak restore <player> - Khôi phục streak của <player>
+
+/dbe revert give <player> <amount> - Trao revert token
+/dbe revert take <player> <amount> - Lấy revert token
+/dbe revert takeall <player> - Lấy toàn bộ revert token
+/dbe streak revert - Chuyển thành chuỗi dài nhất bạn từng có
+/dbe streak revert <player> - Chuyển thành chuỗi dài nhất
+
 /dbe streak set <player> <amount> - Set streak
+/dbe streak resetall - Reset toàn bộ streak
+/dbe confirm <code> - Xác nhận reset
+
+/dbe streak timeset <player> <time> - Set thời gian bossbar
+/dbe streak status <player> <status> - Set trạng thái streak
 ```
 
 ## 🔐 Quyền
