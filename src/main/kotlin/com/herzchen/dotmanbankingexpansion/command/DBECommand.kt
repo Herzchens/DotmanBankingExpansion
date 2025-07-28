@@ -69,7 +69,7 @@ class DBECommand(private val plugin: DotmanBankingExpansion) : CommandExecutor {
         if (sender.hasPermission("dbe.admin")) {
             sender.sendMessage(Component.text("----Admin Command-------", NamedTextColor.AQUA))
             sender.sendMessage(Component.text("/dbe reload - Tải lại cấu hình plugin", NamedTextColor.YELLOW))
-            sender.sendMessage(Component.text("/dbe streakinfo [player] - Xem thông tin streak của player", NamedTextColor.YELLOW))
+            sender.sendMessage(Component.text("/dbe streakinfo <player> - Xem thông tin streak của player", NamedTextColor.YELLOW))
 
             sender.sendMessage(Component.text("----------Frozen Management----------", NamedTextColor.GOLD))
             sender.sendMessage(Component.text("/dbe frozen give <player> <amount> - Trao frozen token", NamedTextColor.YELLOW))
@@ -81,13 +81,13 @@ class DBECommand(private val plugin: DotmanBankingExpansion) : CommandExecutor {
             sender.sendMessage(Component.text("/dbe restore give <player> <amount> - Trao restore token", NamedTextColor.YELLOW))
             sender.sendMessage(Component.text("/dbe restore take <player> <amount> - Lấy restore token", NamedTextColor.YELLOW))
             sender.sendMessage(Component.text("/dbe restore takeall <player> - Lấy toàn bộ restore token", NamedTextColor.YELLOW))
-            sender.sendMessage(Component.text("/dbe streak restore [player] - Khôi phục streak", NamedTextColor.YELLOW))
+            sender.sendMessage(Component.text("/dbe streak restore <player> - Khôi phục streak", NamedTextColor.YELLOW))
 
             sender.sendMessage(Component.text("----------Revert Management----------", NamedTextColor.GOLD))
             sender.sendMessage(Component.text("/dbe revert give <player> <amount> - Trao revert token", NamedTextColor.YELLOW))
             sender.sendMessage(Component.text("/dbe revert take <player> <amount> - Lấy revert token", NamedTextColor.YELLOW))
             sender.sendMessage(Component.text("/dbe revert takeall <player> - Lấy toàn bộ revert token", NamedTextColor.YELLOW))
-            sender.sendMessage(Component.text("/dbe streak revert [player] - Chuyển thành chuỗi dài nhất", NamedTextColor.YELLOW))
+            sender.sendMessage(Component.text("/dbe streak revert <player> - Chuyển thành chuỗi dài nhất", NamedTextColor.YELLOW))
 
             sender.sendMessage(Component.text("----------Debug Command----------", NamedTextColor.GOLD))
             sender.sendMessage(Component.text("/dbe streak timeset <player> <time> - Set thời gian bossbar", NamedTextColor.YELLOW))
