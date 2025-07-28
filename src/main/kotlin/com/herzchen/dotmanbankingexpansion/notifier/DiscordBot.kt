@@ -31,16 +31,16 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
                 .build()
                 .awaitReady()
 
-            logger.log("Discord bot started successfully")
+            logger.log("Bot đã khởi động lại !")
 
             if (config.debugEnabled) {
                 jda.getGuildById(config.debugGuildId)
                     ?.getTextChannelById(config.debugChannelId)
                     ?.let { debugChannel = it }
-                    ?: logger.log("Debug channel/guild not found")
+                    ?: logger.log("Không tìm thấy máy chủ/kênh debug !")
             }
         } catch (e: Exception) {
-            logger.log("Failed to start Discord bot: ${e.message}")
+            logger.log("Khởi động bot discord thất bại: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -92,8 +92,8 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
             return
         }
         if (config.debugEnabled) {
-            sendDebugMessage("💰 Donation amount: $amount VNĐ")
-            sendDebugMessage("🔍 All levels: ${config.commands.keys.sorted().joinToString()}")
+            sendDebugMessage("💰 Tổng donate: $amount VNĐ")
+            sendDebugMessage("🔍 Các mốc nạp tiền: ${config.commands.keys.sorted().joinToString()}")
         }
 
         var bonusTimes = 0
@@ -110,7 +110,7 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
                     runCommand(cmd, bonusTimes)
                 }
                 if (config.debugEnabled) {
-                    sendDebugMessage("🎁 Milestone bonus executed $bonusTimes times for $amount VNĐ")
+                    sendDebugMessage("🎁 Milestone bonus được trao $bonusTimes lần cho $amount VNĐ")
                 }
             }
         }
@@ -135,11 +135,11 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
                 }
 
                 if (config.debugEnabled) {
-                    sendDebugMessage("🔥 Streak updated for $player: $streak days")
+                    sendDebugMessage("🔥 Cập nhật chuỗi cho $player: $streak ngày")
                 }
             } else {
                 if (config.debugEnabled) {
-                    sendDebugMessage("⚠️ Player $player is not online, streak not updated.")
+                    sendDebugMessage("⚠️ Người chơi $player chưa online, chuỗi chưa được cập nhật.")
                 }
             }
         }
@@ -161,22 +161,22 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
         }
 
         if (toRun.isNotEmpty() || bonusTimes > 0) {
-            logger.log("Processed donation: $player - $amount VNĐ - $cluster")
+            logger.log("Xử lý thanh toán: $player - $amount VNĐ - $cluster")
             val milestoneText = if (bonusTimes > 0) " (Milestone x$bonusTimes)" else ""
 
             sendDebugEmbed(
-                "💰 DONATE PROCESSED",
-                "**Amount:** $amount VNĐ$milestoneText\n" +
-                        "**Player:** $player\n" +
-                        "**Cluster:** $cluster\n" +
-                        "**Commands executed:** ${toRun.size + (if (bonusTimes > 0) config.milestoneCommands.size else 0)}",
+                "💰 BIẾT ÔNG HOÀN KHÔNG ?",
+                "**Tổng:** $amount VNĐ$milestoneText\n" +
+                        "**Người chơi:** $player\n" +
+                        "**Cụm:** $cluster\n" +
+                        "**Số lệnh thực hiện:** ${toRun.size + (if (bonusTimes > 0) config.milestoneCommands.size else 0)}",
                 Color(0x00FF00)
             )
         } else {
-            logger.log("No commands for donation: $amount VNĐ")
+            logger.log("Không tìm thấy lệnh cho mốc: $amount VNĐ")
             sendDebugEmbed(
-                "⚠️ DONATE PROCESSING ERROR",
-                "No commands found for donation amount: $amount VNĐ",
+                "⚠️ GIAO DỊCH THẤT BẠI",
+                "Không tìm thấy lệnh cho mốc: $amount VNĐ",
                 Color(0xFF0000)
             )
         }
@@ -196,43 +196,25 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
         Bukkit.getScheduler().runTask(plugin, Runnable {
             try {
                 val result = executeCommandAndCapture(cmd)
-                val timesText = if (times > 1) " tổng thi hành [x$times]" else ""
+                val timesText = if (times > 1) " Tổng thi hành [x$times]" else ""
 
                 plugin.pluginLogger.logCommandExecution(cmd, result.success, result.response)
 
                 if (config.debugEnabled) {
                     val emoji = if (result.success) "✅" else "❌"
-                    sendDebugMessage("$emoji Executed command `$cmd`$timesText")
+                    sendDebugMessage("$emoji Thi hành lệnh `$cmd`$timesText")
 
                 }
 
             } catch (e: Exception) {
                 plugin.pluginLogger.logCommandExecution(cmd, false, "Exception: ${e.message}")
                 if (config.debugEnabled) {
-                    sendDebugMessage("❌ Error executing command `$cmd`: ${e.message}")
+                    sendDebugMessage("❌ Lỗi thi hành lệnh `$cmd`: ${e.message}")
                 }
             }
         })
     }
-
-    fun sendPrivateMessage(username: String, message: String) {
-        if (!plugin.configManager.discordNotificationsEnabled) return
-
-        try {
-            val users = jda.users
-            val user = users.find { it.name == username }
-
-            user?.let {
-                it.openPrivateChannel().queue { channel ->
-                    channel.sendMessage(message).queue()
-                }
-            } ?: run {
-                logger.log("Discord user not found: $username")
-            }
-        } catch (e: Exception) {
-            logger.log("Error sending private message: ${e.message}")
-        }
-    }
+    //TODO Init Discord Hook to send messages to player in order to remind player
 
     private fun executeCommandAndCapture(cmd: String): CommandResult {
         val outputCapture = ByteArrayOutputStream()
@@ -268,7 +250,7 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
                 .build()
             debugChannel?.sendMessageEmbeds(embed)?.queue()
         } catch (e: Exception) {
-            logger.log("Error sending debug embed: ${e.message}")
+            logger.log("Lỗi gửi tin nhắn debug: ${e.message}")
         }
     }
 
@@ -278,11 +260,11 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
         try {
             jda.shutdown()
             if (!jda.awaitShutdown(Duration.ofSeconds(10))) {
-                logger.log("Warning: Discord bot shutdown timed out")
+                logger.log("Cảnh báo: Quá hạn thời gian shutdown bot!")
             }
-            logger.log("Discord bot shutdown")
+            logger.log("Bot đã ngừng hoạt động")
         } catch (e: Exception) {
-            logger.log("Error shutting down Discord bot: ${e.message}")
+            logger.log("Có lỗi xảy ra khi tắt bot: ${e.message}")
         }
     }
 }
