@@ -1,20 +1,21 @@
 discord:
-  token: "your_bot_token"
-  guild-id: "your_guild_id"
-  channel-id: "your_channel_id"
+  token: "your_bot_token" # Replace with your bot token (keep it secret)
+  guild-id: "your_guild_id" # Replace with your guild ID (right click on guild and choose copy guild ID)
+  channel-id: "your_channel_id" # Replace with your channel ID (right click on channel and choose copy channel ID)
   accept-user-messages: false # Set value to "true" to allow human messages
 
+# Note: If you use this plugin for more than 1 cluster, it's advised to set only 1 cluster per plugin per cluster
 clusters: # Name must be matched with the name in the bot messages
-  - SkyFree
-  - OtherCluster1
-  - OtherCluster2
+  - SkyFree # Example
+  - OtherCluster1 # Replace with your own or delete it
+  - OtherCluster2 # Replace with your own or delete it
 
-accepted-methods:
-  - Ngân hàng
-  - Thẻ Cào
-  - Thủ Công
+accepted-methods: # Accepted method to activate the commands
+  - Ngân hàng # Example 1
+  - Thẻ Cào   # Example 2
+  - Thủ Công  # Example 3
 
-commands:
+commands: # Command executes when a player donate, support all plugins, This is only count on 1 time donate, Dotman has its own milestone
   10000:
     - "give {player} dirt 1"
   20000:
@@ -42,14 +43,13 @@ commands:
 milestone-bonus:
   enabled: true
   amount: 50000 # Every 50K VNĐ
-  commands: # If amount set to an integer, only give <amount> times, if set to {bonus_times}, it will give 1 per milestone
+  commands: # If amount set to an integer, only give <amount> times, if set to {bonus_times}, it will give 1 per milestone triggered
     - "give {player} string {bonus_times}"
 
 # Streak system configuration
 streak:
-  enabled: true
-  cycle-hours: 24 # Reset time in hours
-  discord-notifications: true # Turn on/off discord notify
+  enabled: true # Set to "false" to stop using the streak systems
+  discord-notifications: true # Turn on/off discord notify (Haven't implemented yet)
   commands:
     1:
       - "say {player} has started their donation streak!"
@@ -61,5 +61,5 @@ streak:
 
 debug:
   enabled: false # Set value to "true" to enable debug
-  guild-id: "your_guild_id"
-  channel-id: "your_channel_id"
+  guild-id: "your_guild_id" # Replace with your guild ID (right click on guild and choose copy guild ID)
+  channel-id: "your_channel_id" # Replace with your channel ID (right click on channel and choose copy channel ID)
