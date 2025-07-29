@@ -32,6 +32,7 @@ class DBECommand(private val plugin: DotmanBankingExpansion) : CommandExecutor {
             "frozen", "restore", "revert" -> handleTokenManagement(sender, args)
             "help" -> showHelp(sender)
             "confirm" -> handleConfirm(sender, args)
+            "discord" -> handleDiscord(sender, args)
             else -> showHelp(sender)
         }
 
@@ -66,6 +67,12 @@ class DBECommand(private val plugin: DotmanBankingExpansion) : CommandExecutor {
         sender.sendMessage(Component.text("/dbe streak restore - Khôi phục streak", NamedTextColor.YELLOW))
         sender.sendMessage(Component.text("/dbe streak revert - Chuyển thành chuỗi dài nhất bạn từng có", NamedTextColor.YELLOW))
 
+        sender.sendMessage(Component.text("----Discord Command--------", NamedTextColor.AQUA))
+        sender.sendMessage(Component.text("/dbe discord link <id | username> - Liên kết discord", NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("/dbe discord unlink - Huỷ liên kết discord", NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("/dbe discord confirm link <code> - Xác nhân liên kết discord", NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("/dbe discord confirm unlink <code> - Xác nhận huỷ liên kết discord", NamedTextColor.YELLOW))
+
         if (sender.hasPermission("dbe.admin")) {
             sender.sendMessage(Component.text("----Admin Command-------", NamedTextColor.AQUA))
             sender.sendMessage(Component.text("/dbe reload - Tải lại cấu hình plugin", NamedTextColor.YELLOW))
@@ -97,6 +104,7 @@ class DBECommand(private val plugin: DotmanBankingExpansion) : CommandExecutor {
             sender.sendMessage(Component.text("/dbe streak resetall - Reset toàn bộ streak", NamedTextColor.YELLOW))
             sender.sendMessage(Component.text("/dbe confirm <code> - Xác nhận reset", NamedTextColor.YELLOW))
             sender.sendMessage(Component.text("/dbe streak set <player> <amount> - Set streak", NamedTextColor.YELLOW))
+
         }
     }
 
@@ -139,11 +147,18 @@ class DBECommand(private val plugin: DotmanBankingExpansion) : CommandExecutor {
     }
 
     private fun handleTokenManagement(sender: CommandSender, args: Array<out String>) {
+        val tokenType = args[0].lowercase()
+        val requiredPermission = "dbe.$tokenType"
+
+        if (!sender.hasPermission(requiredPermission) && !sender.hasPermission("dbe.admin")) {
+            sender.sendMessage(Component.text("Bạn không có quyền sử dụng lệnh này!", NamedTextColor.RED))
+            return
+        }
+
         if (args.size < 2) {
             showTokenHelp(sender, args.getOrNull(0) ?: "frozen|restore|revert")
             return
         }
-        val tokenType = args[0].lowercase()
         val action = args[1].lowercase()
 
         if (action == "takeall") {
@@ -265,7 +280,7 @@ class DBECommand(private val plugin: DotmanBankingExpansion) : CommandExecutor {
     }
 
     private fun handleSetStreak(sender: CommandSender, args: Array<out String>) {
-        if (!sender.hasPermission("dbe.admin")) {
+        if (!sender.hasPermission("dbe.set") && !sender.hasPermission("dbe.admin")) {
             sender.sendMessage(Component.text("Bạn không có quyền sử dụng lệnh này!", NamedTextColor.RED))
             return
         }
@@ -330,7 +345,7 @@ class DBECommand(private val plugin: DotmanBankingExpansion) : CommandExecutor {
     }
 
     private fun handleTimeSet(sender: CommandSender, args: Array<out String>) {
-        if (!sender.hasPermission("dbe.admin")) {
+        if (!sender.hasPermission("dbe.timeset") && !sender.hasPermission("dbe.admin")) {
             sender.sendMessage(Component.text("Bạn không có quyền!", NamedTextColor.RED))
             return
         }
@@ -384,7 +399,7 @@ class DBECommand(private val plugin: DotmanBankingExpansion) : CommandExecutor {
     }
 
     private fun handleStatusSet(sender: CommandSender, args: Array<out String>) {
-        if (!sender.hasPermission("dbe.admin")) {
+        if (!sender.hasPermission("dbe.status") && !sender.hasPermission("dbe.admin")) {
             sender.sendMessage(Component.text("Bạn không có quyền sử dụng lệnh này!", NamedTextColor.RED))
             return
         }
@@ -415,6 +430,83 @@ class DBECommand(private val plugin: DotmanBankingExpansion) : CommandExecutor {
         } else {
             sender.sendMessage(Component.text("Thao tác thất bại!", NamedTextColor.RED))
         }
+    }
+
+    private fun handleDiscord(sender: CommandSender, args: Array<out String>) {
+        if (args.size < 2) {
+            showDiscordHelp(sender)
+            return
+        }
+        when (args[1].lowercase()) {
+            "link" -> handleDiscordLink(sender, args)
+            "unlink" -> handleDiscordUnlink(sender)
+            "confirm" -> handleDiscordConfirm(sender, args)
+            else -> showDiscordHelp(sender)
+        }
+    }
+
+    private fun handleDiscordLink(sender: CommandSender, args: Array<out String>) {
+        if (sender !is Player) {
+            sender.sendMessage(Component.text("Chỉ người chơi mới sử dụng được lệnh này", NamedTextColor.RED))
+            return
+        }
+
+        if (args.size < 3) {
+            sender.sendMessage(Component.text("Sử dụng: /dbe discord link <discord-id>", NamedTextColor.RED))
+            return
+        }
+
+        val discordId = args[2]
+        val code = plugin.discordLinkManager.createLinkRequest(sender, discordId)
+
+        sender.sendMessage(Component.text("Mã xác nhận: $code", NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("Hãy gửi mã này cho bot trong Discord qua kênh riêng (DM) để xác nhận", NamedTextColor.YELLOW))
+
+        sender.sendMessage(Component.text("Cách xác nhận:", NamedTextColor.GOLD))
+        sender.sendMessage(Component.text("1. Mở Discord và nhắn tin riêng với bot", NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("2. Gửi nội dung: $code", NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("3. Bot sẽ xác nhận liên kết tự động", NamedTextColor.YELLOW))
+    }
+
+    private fun handleDiscordUnlink(sender: CommandSender) {
+        if (sender !is Player) {
+            sender.sendMessage(Component.text("Chỉ người chơi mới sử dụng được lệnh này", NamedTextColor.RED))
+            return
+        }
+
+        val code = plugin.discordLinkManager.createUnlinkRequest(sender)
+        sender.sendMessage(Component.text("Mã xác nhận: $code", NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("Sử dụng /dbe discord confirm $code để xác nhận", NamedTextColor.YELLOW))
+    }
+
+    private fun handleDiscordConfirm(sender: CommandSender, args: Array<out String>) {
+        if (sender !is Player) {
+            sender.sendMessage(Component.text("Chỉ người chơi mới sử dụng được lệnh này", NamedTextColor.RED))
+            return
+        }
+
+        if (args.size < 3) {
+            sender.sendMessage(Component.text("Sử dụng: /dbe discord confirm <mã>", NamedTextColor.RED))
+            return
+        }
+
+        val code = args[2]
+        val success = plugin.discordLinkManager.confirmLink(sender, code) ||
+                plugin.discordLinkManager.confirmUnlink(sender, code)
+
+        if (success) {
+            sender.sendMessage(Component.text("Xác nhận thành công!", NamedTextColor.GREEN))
+        } else {
+            sender.sendMessage(Component.text("Mã xác nhận không hợp lệ hoặc đã hết hạn", NamedTextColor.RED))
+        }
+    }
+
+    private fun showDiscordHelp(sender: CommandSender) {
+        sender.sendMessage(Component.text("Sử dụng lệnh Discord:", NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("/dbe discord link <id | username> - Liên kết discord để nhận thông báo", NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("/dbe discord unlink - Huỷ liên kết discord", NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("/dbe discord confirm link <code> - Xác nhân liên kết discord", NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("/dbe discord confirm unlink <code> - Xác nhận huỷ liên kết discord", NamedTextColor.YELLOW))
     }
 
     private fun generateConfirmationCode(): String {
