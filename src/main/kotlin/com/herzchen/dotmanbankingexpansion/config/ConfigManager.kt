@@ -30,11 +30,21 @@ class ConfigManager(private val plugin: JavaPlugin) {
 
     var discordNotificationsEnabled = false
 
+    var discordLinkEnabled = false
+    var discordLinkCodeLength = 6
+    var discordLinkExpireMinutes = 3
+    var discordLinkMessage = ""
+    var discordInviteLink = ""
+    val discordReminderMessages = mutableMapOf<String, String>()
+
 
     fun loadConfig() {
         val configFile = File(plugin.dataFolder, "config.yml")
         if (!configFile.exists()) {
             plugin.saveResource("config.yml", false)
+        }
+        if (!streakEnabled) {
+            plugin.logger.info("Hệ thống streak đã bị tắt trong cấu hình")
         }
 
         plugin.reloadConfig()
@@ -75,6 +85,18 @@ class ConfigManager(private val plugin: JavaPlugin) {
 
             discordNotificationsEnabled = getBoolean("discord.notifications-enabled", false)
 
+            discordLinkEnabled = getBoolean("discord.link-enabled", false)
+            discordLinkCodeLength = getInt("discord.link-code-length", 6)
+            discordLinkExpireMinutes = getInt("discord.link-expire-minutes", 3)
+            discordLinkMessage = getString("discord.link-message", "") ?: ""
+            discordInviteLink = getString("discord.invite-link", "") ?: ""
+
+            discordReminderMessages.clear()
+            val remindersSection = getConfigurationSection("discord.reminder-messages")
+            remindersSection?.getKeys(false)?.forEach { key ->
+                discordReminderMessages[key] = remindersSection.getString(key) ?: ""
+            }
+
 
             plugin.logger.info("Discord token loaded: ${if (token.isNotEmpty()) "***${token.takeLast(4)}" else "EMPTY"}")
             plugin.logger.info("Guild ID: $guildId, Channel ID: $channelId")
@@ -89,6 +111,8 @@ class ConfigManager(private val plugin: JavaPlugin) {
             plugin.logger.info("Milestone bonus: enabled=$milestoneBonusEnabled, amount=$milestoneAmount, commands=$milestoneCommands")
             plugin.logger.info("Streak: enabled=$streakEnabled, cycle=$streakCycleHours hours, freeze=$streakFreezeItem, restore=$streakRestoreItem")
             plugin.logger.info("Streak commands: ${streakCommands.keys}")
+            plugin.logger.info("Discord link: enabled=$discordLinkEnabled, code length=$discordLinkCodeLength, expire=${discordLinkExpireMinutes}min")
+            plugin.logger.info("Discord reminder messages: ${discordReminderMessages.keys}")
         }
     }
 
