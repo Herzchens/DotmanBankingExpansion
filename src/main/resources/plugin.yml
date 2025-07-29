@@ -10,5 +10,26 @@ commands:
     aliases: [dotmanbanking]
 permissions:
   dbe.admin:
-    description: Allows access to admin commands
+    description: Allows access to all admin commands
     default: op
+  dbe.set:
+    description: Allows setting streak
+    default: op
+  dbe.timeset:
+    description: Allows setting streak time
+    default: op
+  dbe.status:
+    description: Allows setting streak status
+    default: op
+  dbe.frozen:
+    description: Allows managing frozen tokens
+    default: op
+  dbe.restore:
+    description: Allows managing restore tokens
+    default: op
+  dbe.revert:
+    description: Allows managing revert tokens
+    default: op
+  dbe.discord:
+    description: Allows access to discord commands
+    default: true
