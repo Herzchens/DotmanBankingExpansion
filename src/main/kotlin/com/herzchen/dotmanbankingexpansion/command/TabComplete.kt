@@ -17,7 +17,7 @@ class TabComplete : TabCompleter {
         if (command.name.equals("dbe", ignoreCase = true)) {
             return when (args.size) {
                 1 -> {
-                    val base = listOf("reload", "streakinfo", "streak", "help", "confirm")
+                    val base = listOf("reload", "streakinfo", "streak", "help", "confirm", "discord")
                     val admin = if (sender.hasPermission("dbe.admin")) {
                         listOf("frozen", "restore", "revert")
                     } else {
@@ -43,6 +43,7 @@ class TabComplete : TabCompleter {
                     } else {
                         emptyList()
                     }
+                    "discord" -> listOf("link", "unlink", "confirm").filter { it.startsWith(args[1], true) }
                     else -> emptyList()
                 }
                 3 -> when (args[0].lowercase()) {
@@ -51,6 +52,10 @@ class TabComplete : TabCompleter {
                     "streak" -> when (args[1].lowercase()) {
                         "frozen", "set", "timeset", "status" ->
                             Bukkit.getOnlinePlayers().map { it.name }.filter { it.startsWith(args[2], true) }
+                        else -> emptyList()
+                    }
+                    "discord" -> when (args[1].lowercase()) {
+                        "confirm" -> listOf("link", "unlink").filter { it.startsWith(args[2], true) }
                         else -> emptyList()
                     }
                     else -> emptyList()
