@@ -3,6 +3,31 @@ discord:
   guild-id: "your_guild_id" # Replace with your guild ID (right click on guild and choose copy guild ID)
   channel-id: "your_channel_id" # Replace with your channel ID (right click on channel and choose copy channel ID)
   accept-user-messages: false # Set value to "true" to allow human messages
+  notifications-enabled: true
+  link-enabled: true
+  link-code-length: 6
+  link-expire-minutes: 3
+  invite-link: "https://discord.gg/your-invite"
+  link-message: "Tham gia Discord tụi mình để có trải nghiệm tốt nhất nhé: {link}"
+  reminder-messages:
+    streak-warning: "⚠️ Chuỗi donate của bạn sắp hết hạn trong **{time}**! Hãy donate ngay để giữ chuỗi."
+    streak-frozen: "❄️ Chuỗi donate của bạn đã được đóng băng. Bạn còn **{tokens}** token đóng băng."
+    streak-expired: "⌛ Chuỗi donate của bạn đã hết hạn! Bạn đã mất chuỗi **{streak}** ngày."
+    streak-restored: "✨ Chuỗi donate của bạn đã được khôi phục! Chuỗi hiện tại: **{streak}** ngày. Token khôi phục còn: **{tokens}**."
+    streak-reverted: "🔄 Chuỗi donate của bạn đã được chuyển thành chuỗi dài nhất (**{current}** ngày). Token revert còn: **{tokens}**."
+    streak-inactive: "💤 Chuỗi donate của bạn đã trở về trạng thái chưa bắt đầu."
+    streak-start: "🎉 Bạn đã bắt đầu chuỗi donate! Chuỗi hiện tại: **{streak}** ngày."
+    streak-restart: "🚀 Bạn đã khởi động lại chuỗi donate! Chuỗi hiện tại: **{streak}** ngày."
+    streak-increase: "🔥 Chuỗi donate của bạn đã tăng lên **{current}** ngày (trước đó: {previous} ngày)."
+    streak-reset: "💔 Chuỗi donate của bạn đã bị reset. Chuỗi mới: **{current}** ngày (trước đó: {previous} ngày)."
+    streak-admin-set: "⚙️ Admin đã set chuỗi donate của bạn từ **{previous}** ngày thành **{current}** ngày."
+    streak-admin-frozen: "⏸️ Admin đã đóng băng chuỗi donate của bạn trong **{days}** ngày."
+    streak-admin-time-set: "⏱️ Admin đã chỉnh thời gian còn lại của chuỗi donate của bạn thành **{time}**."
+    streak-admin-status-set: "📊 Admin đã thay đổi trạng thái chuỗi donate của bạn từ **{previous}** thành **{current}**."
+    streak-global-reset: "♻️ Toàn bộ chuỗi donate đã được reset bởi admin."
+    streak-continue-frozen: "❄️ Chuỗi donate của bạn vẫn đang được đóng băng. Token đóng băng còn: **{tokens}**."
+    streak-freeze-expired: "⌛ Token đóng băng đã hết, chuỗi donate của bạn đã hết hạn!"
+    invoice: "✅ Bạn đã donate **{amount}** VNĐ tại cụm **{cluster}**. Cảm ơn bạn đã ủng hộ server!"
 
 # Note: If you use this plugin for more than 1 cluster, it's advised to set only 1 cluster per plugin per cluster
 clusters: # Name must be matched with the name in the bot messages
@@ -16,6 +41,7 @@ accepted-methods: # Accepted method to activate the commands
   - Thủ Công  # Example 3
 
 commands: # Command executes when a player donate, support all plugins, This is only count on 1 time donate, Dotman has its own milestone
+# You have to keep at least 1 milestone for the stabilization (just use command at the milestone "say {player} thank you for your donation")
   10000:
     - "give {player} dirt 1"
   20000:
@@ -43,13 +69,13 @@ commands: # Command executes when a player donate, support all plugins, This is 
 milestone-bonus:
   enabled: true
   amount: 50000 # Every 50K VNĐ
+  accepted-methods: ["Ngân hàng", "Thẻ Cào"] # Accepted method, different with the accepted methods above
   commands: # If amount set to an integer, only give <amount> times, if set to {bonus_times}, it will give 1 per milestone triggered
     - "give {player} string {bonus_times}"
 
 # Streak system configuration
 streak:
   enabled: true # Set to "false" to stop using the streak systems
-  discord-notifications: true # Turn on/off discord notify (Haven't implemented yet)
   commands:
     1:
       - "say {player} has started their donation streak!"
@@ -58,6 +84,7 @@ streak:
     7:
       - "give {player} netherite_block 1"
       - "say {player} has a 7-day streak! Amazing!"
+
 
 debug:
   enabled: false # Set value to "true" to enable debug
