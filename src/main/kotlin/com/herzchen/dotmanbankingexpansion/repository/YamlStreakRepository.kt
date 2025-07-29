@@ -6,18 +6,23 @@ import org.bukkit.configuration.file.YamlConfiguration
 
 import java.io.File
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 class YamlStreakRepository(dataFolder: File) : StreakRepository {
     private val file = File(dataFolder, "streaks.yml")
     private val cfg = YamlConfiguration.loadConfiguration(file)
+    private val dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy - HH:mm:ss:SSS")
 
     override fun find(uuid: UUID): StreakData? {
         val section = cfg.getConfigurationSection(uuid.toString()) ?: return null
+
         return StreakData(
             uuid = uuid,
-            startTime = Instant.parse(section.getString("startTime")!!),
-            lastUpdate = Instant.parse(section.getString("lastUpdate")!!),
+            startTime = parseDateTime(section.getString("startTime")!!),
+            lastUpdate = parseDateTime(section.getString("lastUpdate")!!),
             state = enumValueOf(section.getString("state")!!),
             freezeTokens = section.getInt("freezeTokens"),
             restoreTokens = section.getInt("restoreTokens"),
@@ -35,18 +40,26 @@ class YamlStreakRepository(dataFolder: File) : StreakRepository {
         }
 
     override fun save(data: StreakData) {
-        cfg.createSection(data.uuid.toString(), mapOf(
-            "startTime" to data.startTime.toString(),
-            "lastUpdate" to data.lastUpdate.toString(),
-            "state" to data.state.name,
-            "freezeTokens" to data.freezeTokens,
-            "restoreTokens" to data.restoreTokens,
-            "revertTokens" to data.revertTokens,
-            "currentStreak" to data.currentStreak,
-            "previousStreak" to data.previousStreak,
-            "longestStreak" to data.longestStreak,
-            "discordUsername" to data.discordUsername
-        ))
+        val section = cfg.createSection(data.uuid.toString())
+        section.set("startTime", formatDateTime(data.startTime))
+        section.set("lastUpdate", formatDateTime(data.lastUpdate))
+        section.set("state", data.state.name)
+        section.set("freezeTokens", data.freezeTokens)
+        section.set("restoreTokens", data.restoreTokens)
+        section.set("revertTokens", data.revertTokens)
+        section.set("currentStreak", data.currentStreak)
+        section.set("previousStreak", data.previousStreak)
+        section.set("longestStreak", data.longestStreak)
+        section.set("discordUsername", data.discordUsername)
         cfg.save(file)
+    }
+
+    private fun formatDateTime(instant: Instant): String {
+        return dateFormatter.format(instant.atZone(ZoneId.systemDefault()))
+    }
+
+    private fun parseDateTime(dateString: String): Instant {
+        val localDateTime = LocalDateTime.parse(dateString, dateFormatter)
+        return localDateTime.atZone(ZoneId.systemDefault()).toInstant()
     }
 }
