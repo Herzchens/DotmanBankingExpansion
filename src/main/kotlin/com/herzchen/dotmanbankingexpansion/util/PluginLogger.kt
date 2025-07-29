@@ -24,7 +24,7 @@ class PluginLogger(private val plugin: DotmanBankingExpansion) {
         log("=== Bot starting up ===")
     }
 
-    fun log(message: String) {
+    fun log(message: String, level: String = "INFO") {
         try {
             val today = LocalDate.now()
             val fileName = fileNameFormatter.format(today) + ".log"
@@ -37,23 +37,40 @@ class PluginLogger(private val plugin: DotmanBankingExpansion) {
             }
 
             val timestamp = entryFormatter.format(LocalDateTime.now())
-            val line = "[$timestamp] $message"
+            val line = "[$timestamp] [$level] $message"
 
             writer?.write(line)
             writer?.newLine()
             writer?.flush()
 
-            plugin.server.consoleSender.sendMessage(line)
+            val consoleMsg = when (level) {
+                "WARN" -> "§e$line"
+                "ERROR" -> "§c$line"
+                "DEBUG" -> "§b$line"
+                "SUCCESS" -> "§a$line"
+                else -> "§f$line"
+            }
+            plugin.server.consoleSender.sendMessage(consoleMsg)
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    fun logDiscordAction(action: String, player: String? = null, discordId: String? = null) {
+        val message = buildString {
+            append("DISCORD_ACTION: $action")
+            if (player != null) append(" | Player: $player")
+            if (discordId != null) append(" | DiscordID: $discordId")
+        }
+        log(message, "DISCORD")
     }
 
     fun logCommandExecution(cmd: String, success: Boolean, response: String? = null) {
         val status = if (success) "SUCCESS" else "FAILED"
         val emoji = if (success) "✅" else "❌"
         val responsePart = if (response != null) " | Response: $response" else ""
+        val level = if (success) "SUCCESS" else "ERROR"
 
-        log("$emoji Command: '$cmd' - Status: $status$responsePart")
+        log("$emoji Command: '$cmd' - Status: $status$responsePart", level)
     }
 }
