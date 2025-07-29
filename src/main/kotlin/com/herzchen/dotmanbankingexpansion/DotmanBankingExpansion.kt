@@ -5,6 +5,7 @@ import com.herzchen.dotmanbankingexpansion.command.StreakInfoCommand
 import com.herzchen.dotmanbankingexpansion.command.TabComplete
 import com.herzchen.dotmanbankingexpansion.config.ConfigManager
 import com.herzchen.dotmanbankingexpansion.manager.ConfirmationManager
+import com.herzchen.dotmanbankingexpansion.manager.DiscordLinkManager
 import com.herzchen.dotmanbankingexpansion.manager.StreakDataManager
 import com.herzchen.dotmanbankingexpansion.manager.StreakTokenManager
 import com.herzchen.dotmanbankingexpansion.notifier.DiscordBot
@@ -31,6 +32,7 @@ class DotmanBankingExpansion : JavaPlugin() {
     private lateinit var streakScheduler: StreakScheduler
     lateinit var confirmationManager: ConfirmationManager
     lateinit var streakInfoCommand: StreakInfoCommand
+    lateinit var discordLinkManager: DiscordLinkManager
 
     override fun onEnable() {
         if (!dataFolder.exists()) dataFolder.mkdirs()
@@ -38,6 +40,7 @@ class DotmanBankingExpansion : JavaPlugin() {
 
         configManager = ConfigManager(this).also { it.loadConfig() }
         pluginLogger = PluginLogger(this)
+        discordLinkManager = DiscordLinkManager(this)
         pluginLogger.log("Khởi chạy plugin...")
 
         if (configManager.token.isBlank()) {
