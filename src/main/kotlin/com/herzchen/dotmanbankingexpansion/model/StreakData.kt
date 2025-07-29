@@ -14,11 +14,11 @@ data class StreakData(
     var currentStreak: Int = 0,
     var previousStreak: Int = 0,
     var longestStreak: Int = 0,
-    var discordUsername: String? = null
+    var discordUsername: String? = null,
+    var discordId: String? = null
 ) {
     fun progress(cycleSeconds: Long): Double {
         val elapsed = java.time.Duration.between(lastUpdate, Instant.now()).seconds
         return (elapsed.coerceIn(0, cycleSeconds).toDouble() / cycleSeconds)
     }
-    fun canRestore(): Boolean = state == StreakState.EXPIRED
 }
