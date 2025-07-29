@@ -4,7 +4,9 @@ import com.herzchen.dotmanbankingexpansion.DotmanBankingExpansion
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
+import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
@@ -46,10 +48,18 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
     }
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
-        if (!event.author.isBot && !config.acceptUserMessages) return
-        if (event.author.isBot && event.author.id == jda.selfUser.id) return
+        if (event.isFromType(ChannelType.PRIVATE)) {
+            handleDirectMessage(event.author, event.message.contentRaw)
+            return
+        }
 
-        if (event.guild.idLong != config.guildId || event.channel.idLong != config.channelId) return
+        if (event.author.isBot) return
+
+        if (event.guild.idLong != config.guildId || event.channel.idLong != config.channelId) {
+            return
+        }
+
+        if (!config.acceptUserMessages) return
 
         val raw = event.message.contentRaw.trim()
         if (!raw.startsWith("## Nạp thẻ")) {
@@ -96,6 +106,14 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
             sendDebugMessage("🔍 Các mốc nạp tiền: ${config.commands.keys.sorted().joinToString()}")
         }
 
+        val bukkitPlayer = Bukkit.getPlayerExact(player)
+        if (plugin.configManager.discordNotificationsEnabled && bukkitPlayer != null) {
+            val data = plugin.streakDataManager.getPlayerData(bukkitPlayer.uniqueId)
+            data?.discordId?.takeIf { it == event.author.id }?.let {
+                sendInvoiceMessage(event.author, amount, cluster)
+            }
+        }
+
         var bonusTimes = 0
         if (config.milestoneBonusEnabled && config.milestoneAmount > 0 && amount > 0) {
             bonusTimes = amount / config.milestoneAmount
@@ -116,13 +134,12 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
         }
 
         if (config.streakEnabled) {
-            val bukkitPlayer = Bukkit.getPlayerExact(player)
             if (bukkitPlayer != null) {
                 val streakData = plugin.streakService.updateStreak(bukkitPlayer.uniqueId)
                 val streak = streakData.currentStreak
 
                 config.streakCommands.forEach { (requiredStreak, commands) ->
-                    if (streak >= requiredStreak) {
+                    if (streak == requiredStreak) {
                         commands.forEach { cmdTemplate ->
                             val cmd = cmdTemplate
                                 .replace("{player}", player)
@@ -133,6 +150,8 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
                         }
                     }
                 }
+
+                bukkitPlayer.sendMessage("Bạn đang có chuỗi $streak ngày!")
 
                 if (config.debugEnabled) {
                     sendDebugMessage("🔥 Cập nhật chuỗi cho $player: $streak ngày")
@@ -149,7 +168,6 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
             .filter { (level, _) -> amount >= level }
             .sortedBy { (level, _) -> level }
             .flatMap { (_, cmds) -> cmds }
-
 
         toRun.forEach { cmdTmpl ->
             val cmd = cmdTmpl
@@ -180,6 +198,74 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
                 Color(0xFF0000)
             )
         }
+    }
+
+    private fun handleDirectMessage(user: User, message: String) {
+        if (message.matches(Regex("\\d{6}"))) {
+            handleDirectMessageCode(user, message)
+        }
+    }
+
+    private fun handleDirectMessageCode(user: User, code: String) {
+        val success = plugin.discordLinkManager.confirmLinkByCode(code, user.id)
+
+        if (success) {
+            user.openPrivateChannel().queue { channel ->
+                channel.sendMessage("✅ Liên kết tài khoản Minecraft thành công!").queue()
+            }
+        } else {
+            user.openPrivateChannel().queue { channel ->
+                channel.sendMessage("""
+                    ❌ Liên kết không thành công!
+                    Nguyên nhân có thể:
+                    - Mã xác nhận không đúng
+                    - Mã đã hết hạn (mã chỉ có hiệu lực ${plugin.configManager.discordLinkExpireMinutes} phút)
+                    - Bạn đang sử dụng tài khoản Discord khác với tài khoản đã đăng ký
+                """.trimIndent()).queue()
+            }
+        }
+    }
+
+    fun sendLinkInstructions(user: User, code: String) {
+        user.openPrivateChannel().queue { channel ->
+            channel.sendMessage("""
+                **HƯỚNG DẪN LIÊN KẾT TÀI KHOẢN MINECRAFT**
+                
+                Bạn vừa yêu cầu liên kết tài khoản Minecraft với Discord. 
+                Để hoàn tất, vui lòng:
+                
+                1. Vào game Minecraft
+                2. Sử dụng lệnh: 
+                   `/dbe discord confirm link $code`
+                
+                Mã này có hiệu lực trong ${plugin.configManager.discordLinkExpireMinutes} phút.
+                """.trimIndent()).queue()
+        }
+    }
+
+    private fun sendInvoiceMessage(user: User, amount: Int, cluster: String) {
+        val message = plugin.configManager.discordReminderMessages["invoice"]
+            ?.replace("{amount}", amount.toString())
+            ?.replace("{cluster}", cluster) ?: return
+
+        user.openPrivateChannel().queue { channel ->
+            channel.sendMessage(message).queue()
+        }
+    }
+
+    fun sendReminder(userId: String, messageKey: String, vararg params: Pair<String, String>) {
+        val messageTemplate = plugin.configManager.discordReminderMessages[messageKey] ?: return
+        var message = messageTemplate
+
+        params.forEach { (key, value) ->
+            message = message.replace("{$key}", value)
+        }
+
+        jda.retrieveUserById(userId).queue({ user ->
+            user.openPrivateChannel().queue { channel ->
+                channel.sendMessage(message).queue()
+            }
+        }, {})
     }
 
     private fun parseAmountWithSuffix(input: String): Int {
@@ -214,7 +300,6 @@ class DiscordBot(private val plugin: DotmanBankingExpansion) : ListenerAdapter()
             }
         })
     }
-    //TODO Init Discord Hook to send messages to player in order to remind player
 
     private fun executeCommandAndCapture(cmd: String): CommandResult {
         val outputCapture = ByteArrayOutputStream()
